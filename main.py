@@ -46,8 +46,8 @@ CONFIG = {
     'OBJECT_DETECTION_PREDICTION_RESOURCE_ID' : os.getenv('OBJECT_DETECTION_PREDICTION_RESOURCE_ID')
 }
 
-form_recognizer_client = FormRecognizerClient(endpoint=CONFIG['FORM_RECOGNIZER_ENDPOINT'], credential=AzureKeyCredential(CONFIG['FORM_RECOGNIZER_KEY']))
-form_training_client = FormTrainingClient(endpoint=CONFIG['FORM_RECOGNITION_ENDPOINT'], credential=AzureKeyCredential(CONFIG['FORM_RECOGNIZER_KEY']))
+form_recognizer_client = FormRecognizerClient(endpoint=CONFIG['FORM_RECOGNITION_ENDPOINT'], credential=AzureKeyCredential(CONFIG['FORM_RECOGNITION_KEY']))
+form_training_client = FormTrainingClient(endpoint=CONFIG['FORM_RECOGNITION_ENDPOINT'], credential=AzureKeyCredential(CONFIG['FORM_RECOGNITION_KEY']))
 face_client = FaceClient(CONFIG['FACIAL_RECOGNITION_ENDPOINT'], CognitiveServicesCredentials(CONFIG['FACIAL_RECOGNITION_ENDPOINT']))
 training_credentials = ApiKeyCredentials(in_headers={"Training-key": CONFIG['OBJECT_DETECTION_TRAINING_KEY']})
 trainer = CustomVisionTrainingClient(CONFIG['OBJECT_DETECTION_TRAINING_ENDPOINT'], training_credentials)
