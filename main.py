@@ -200,13 +200,17 @@ if full_name in flight_manifest_dictonary:
     with open(digital_id_directory + altered_full_name + ".png", "rb") as test_data:
                 digital_id_info = form_recognizer_client.begin_recognize_identity_documents(test_data, content_type="image/png")
     digital_id_results = digital_id_info.result()
+    print("Thank you for presenting your ID. Proceed to show your boarding pass.")
 
     # Extract boarding pass information
+    print("Analyzing boarding pass...")
     with open(boarding_pass_directory + altered_full_name + ".pdf", "rb") as test_data:
                 boarding_pass_info = form_recognizer_client.begin_recognize_custom_forms(model_id=custom_boarding_pass_id, form = test_data, content_type='application/pdf')
     boarding_pass_results = boarding_pass_info.result()
+    print("Boarding pass successfully analyzed.")
 
     # Extract facial features from video 
+    print("Please look at the screen. The camera will now capture facial features...")
     uploaded_video_id = video_analysis.upload_to_video_indexer(
       input_filename=digital_video_directory + altered_full_name + ".mp4",
       video_name=altered_full_name + "-boarding-pass",  # unique identifier for video in Video Indexer platform
@@ -214,7 +218,7 @@ if full_name in flight_manifest_dictonary:
     )
     print("Please wait as we analyze your video...")
     time.sleep(30)
-    print("Analysis complete.")
+    
     video_info = video_analysis.get_video_info(uploaded_video_id, video_language='English')
 
     images = []
@@ -249,8 +253,10 @@ if full_name in flight_manifest_dictonary:
     source_faces_object = detect_face_from_any_url(face_client, digital_id_directory + altered_full_name + ".png")
     detected_face = list_all_faces_from_detected_face_object(source_faces_object)
     detected_face_id = detected_face[0].face_id
+    print("Analysis complete.")
 
     # Prediction on lighter image
+    print("Please proceed to baggage declaration...")
     local_image_path = r'data/lighter_test_images'
     with open(os.path.join (local_image_path,  boarding_dictionary["daniel da cruz"]['Lighter image']), "rb") as test_data:
         results = predictor.detect_image(project_id, publish_iteration_name, test_data.read())
