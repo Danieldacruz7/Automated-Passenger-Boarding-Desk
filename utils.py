@@ -53,7 +53,8 @@ def detect_faces(client, query_images_list):
     return face_ids
 
 def detect_face_from_any_url(face_client, selected_image):
-    detected_faces = face_client.face.detect_with_url(url=selected_image, detection_model='detection_03', return_face_id=True)
+    with open(selected_image, "rb") as test_data:
+        detected_faces = face_client.face.detect_with_stream(image=test_data, detection_model='detection_03', return_face_id=True)
     if not detected_faces:
         raise Exception('No face detected from image {}'.format(selected_image))        
     print('Total face(s) detected  from {}'.format(str(len(detected_faces))))

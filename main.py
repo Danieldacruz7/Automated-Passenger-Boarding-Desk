@@ -51,7 +51,7 @@ CONFIG = {
 
 form_recognizer_client = FormRecognizerClient(endpoint=CONFIG['FORM_RECOGNITION_ENDPOINT'], credential=AzureKeyCredential(CONFIG['FORM_RECOGNITION_KEY']))
 form_training_client = FormTrainingClient(endpoint=CONFIG['FORM_RECOGNITION_ENDPOINT'], credential=AzureKeyCredential(CONFIG['FORM_RECOGNITION_KEY']))
-face_client = FaceClient(CONFIG['FACIAL_RECOGNITION_ENDPOINT'], CognitiveServicesCredentials(CONFIG['FACIAL_RECOGNITION_ENDPOINT']))
+face_client = FaceClient(CONFIG['FACIAL_RECOGNITION_ENDPOINT'], CognitiveServicesCredentials(CONFIG['FACIAL_RECOGNITION_KEY']))
 training_credentials = ApiKeyCredentials(in_headers={"Training-key": CONFIG['OBJECT_DETECTION_TRAINING_KEY']})
 trainer = CustomVisionTrainingClient(CONFIG['OBJECT_DETECTION_TRAINING_ENDPOINT'], training_credentials)
 
@@ -188,12 +188,13 @@ digital_video_directory = "./data/digital-video-sample/"
 thumbnail_directory = "./data/ai-generated-thumbnails/"
 
 print("Hello welcome to the Airport of the future! ")
-first_name = input("Please enter your first name: ")
-second_name = input("Please enter your second name: ")
+first_name = 'daniel' #input("Please enter your first name: ")
+second_name = 'da cruz' # input("Please enter your second name: ")
 full_name = first_name + " " + second_name
 altered_full_name = "-".join(full_name.lower().split())
 
 if full_name in flight_manifest_dictonary:
+    print("")
     print("Please present your ID")
     # Extract digital ID information
     with open(digital_id_directory + altered_full_name + ".png", "rb") as test_data:
@@ -201,6 +202,8 @@ if full_name in flight_manifest_dictonary:
     digital_id_results = digital_id_info.result()
     print("Thank you for presenting your ID. Proceed to show your boarding pass.")
     print("")
+    print(f"digital_id_results {digital_id_results[0].fields['FirstName'].value}")
+    
 
     # Extract boarding pass information
     print("Analyzing boarding pass...")
@@ -209,17 +212,21 @@ if full_name in flight_manifest_dictonary:
     boarding_pass_results = boarding_pass_info.result()
     print("Boarding pass successfully analyzed.")
     print("")
+    print(f"Boarding pass {boarding_pass_results[0].fields['Passenger Name'].value}")
 
     # Extract facial features from video 
-    print("Please look at the screen. The camera will now capture facial features...")
-    uploaded_video_id = video_analysis.upload_to_video_indexer(
-      input_filename=digital_video_directory + altered_full_name + ".mp4",
-      video_name=altered_full_name + "-boarding-pass",  # unique identifier for video in Video Indexer platform
-      video_language='English'
-    )
+    uploaded_video_id = "cb51eabcc6"
+    #print("Please look at the screen. The camera will now capture facial features...")
+    #uploaded_video_id = video_analysis.upload_to_video_indexer(
+    #  input_filename=digital_video_directory + altered_full_name + ".mp4",
+    #  video_name=altered_full_name + "-boarding-pass",  # unique identifier for video in Video Indexer platform
+    #  video_language='English'
+    #)
     print("Please wait as we analyze your video...")
-    time.sleep(120)
     video_info = video_analysis.get_video_info(uploaded_video_id, video_language='English')
+    while video_info['state'] != 'Processed':
+        time.sleep(20)
+        video_info = video_analysis.get_video_info(uploaded_video_id, video_language='English')
 
     images = []
     img_raw = []
@@ -259,7 +266,7 @@ if full_name in flight_manifest_dictonary:
     # Prediction on lighter image
     print("Please proceed to baggage declaration...")
     local_image_path = r'data/lighter_test_images'
-    with open(os.path.join (local_image_path,  boarding_dictionary["daniel da cruz"]['Lighter image']), "rb") as test_data:
+    with open(os.path.join (local_image_path,  boarding_dictionary[full_name]['Lighter image']), "rb") as test_data:
         results = predictor.detect_image(project_id, publish_iteration_name, test_data.read())
     lighter_probs = results.predictions[0].probability
     
@@ -272,26 +279,26 @@ if full_name in flight_manifest_dictonary:
     # Flight Manifest Validation
     for i in range(len(flight_manifest)):
     # Name Validation
-        if (flight_manifest.loc[i, 'Passenger Name'].lower() == (digital_id_results['FirstName'] + " " + digital_id_results['LastName']).lower()) \
-        and (flight_manifest.loc[i, 'Passenger Name'].lower() == (boarding_pass_results['Passenger Name'].lower())):
+        if (flight_manifest.loc[i, 'Passenger Name'].lower() == (digital_id_results[0].fields['FirstName'].value + " " + digital_id_results[0].fields['LastName'].value).lower()) \
+        and (flight_manifest.loc[i, 'Passenger Name'].lower() == ((boarding_pass_results[0].fields['Passenger Name'].value).lower())):
             flight_manifest.loc[i, 'NameValidation'] = True  
         
         # Date of Birth Validation: 
-        if (flight_manifest.loc[i, 'Date of Birth'] == (digital_id_results['DateOfBirth'])):
+        if (flight_manifest.loc[i, 'Date of Birth'] == (digital_id_results[0].fields['DateOfBirth'].value)):
             flight_manifest.loc[i, 'DoB Validation'] = True 
         
         # Boarding Pass Validation
-        if (flight_manifest.loc[i, 'Carrier'] == boarding_pass_results['Flight Carrier']) \
-        and (flight_manifest.loc[i, 'Flight No.'] == int(boarding_pass_results['Flight Number'])) \
-        and (flight_manifest.loc[i, 'Class'] == boarding_pass_results['Flight Class']) \
-        and (flight_manifest.loc[i, 'From'] == boarding_pass_results['Departure Location']) \
-        and (flight_manifest.loc[i, 'To'] == boarding_pass_results['Arrival Location']) \
-        and (flight_manifest.loc[i, 'Date'] == boarding_pass_results['Date']) \
-        and (flight_manifest.loc[i, 'Baggage'] == boarding_pass_results['Baggage Allowance']) \
-        and (flight_manifest.loc[i, 'Seat'] == boarding_pass_results['Seat Allocation']) \
-        and (flight_manifest.loc[i, 'Gate'] == boarding_pass_results['Boarding Gate']) \
-        and (flight_manifest.loc[i, 'Boarding Time'] == boarding_pass_results['Boarding Time.']) \
-        and (flight_manifest.loc[i, 'Ticket No.'] == boarding_pass_results['Ticket Number']):
+        if (flight_manifest.loc[i, 'Carrier'] == boarding_pass_results[0].fields['Flight Carrier'].value) \
+        and (flight_manifest.loc[i, 'Flight No.'] == int(boarding_pass_results[0].fields['Flight Number'].value)) \
+        and (flight_manifest.loc[i, 'Class'] == boarding_pass_results[0].fields['Flight Class'].value) \
+        and (flight_manifest.loc[i, 'From'] == boarding_pass_results[0].fields['Departure Location'].value) \
+        and (flight_manifest.loc[i, 'To'] == boarding_pass_results[0].fields['Arrival Location'].value) \
+        and (flight_manifest.loc[i, 'Date'] == boarding_pass_results[0].fields['Date'].value) \
+        and (flight_manifest.loc[i, 'Baggage'] == boarding_pass_results[0].fields['Baggage Allowance'].value) \
+        and (flight_manifest.loc[i, 'Seat'] == boarding_pass_results[0].fields['Seat Allocation'].value) \
+        and (flight_manifest.loc[i, 'Gate'] == boarding_pass_results[0].fields['Boarding Gate'].value) \
+        and (flight_manifest.loc[i, 'Boarding Time'] == boarding_pass_results[0].fields['Boarding Time.'].value) \
+        and (flight_manifest.loc[i, 'Ticket No.'] == boarding_pass_results[0].fields['Ticket Number'].value):
             flight_manifest.loc[i, 'BoardingPassValidation'] = True
 
         # Person Validation
