@@ -1,7 +1,4 @@
-import os
-import io
-import time
-import datetime
+import os, io, time, datetime
 import requests
 import pandas as pd
 from io import BytesIO
@@ -64,30 +61,31 @@ video_analysis = VideoIndexer(
     vi_subscription_key=CONFIG['SUBSCRIPTION_KEY']
 )
 
-publish_iteration_name = "lighter-detection-model-v10"
-project_id = "6bbf9a05-17c3-4f1f-acaf-05b4d1bafd69"
-iteration_id = "7e20214d-3830-4a7a-8dee-9bcf1670f580"
+lighter_detection_dictionary = {
+    "publish_iteration_name" : "lighter-detection-model-v10",
+    "project_id" : "6bbf9a05-17c3-4f1f-acaf-05b4d1bafd69",
+    "iteration_id" : "7e20214d-3830-4a7a-8dee-9bcf1670f580" 
+}
 
 boarding_dictionary = {
-    "daniel da cruz": {
-                            "digital id url": "https://udacityestorageaccount7.blob.core.windows.net/myblobcontainer7/ca-dl-daniel-da-cruz.png?sp=r&st=2022-11-11T04:20:07Z&se=2022-11-18T13:20:07Z&spr=https&sv=2021-06-08&sr=b&sig=%2BYr%2FowOPJfmdtr9Riz2j3QFsthTDrWKgjXqOgI4mBf0%3D", 
-                            "Lighter image": "lighter_test_set_1of5.jpg"
-    }, 
-    "helena da cruz": {
-                            "digital id url": "https://udacityestorageaccount7.blob.core.windows.net/myblobcontainer7/ca-dl-daniel-da-cruz.png?sp=r&st=2022-11-11T04:20:07Z&se=2022-11-18T13:20:07Z&spr=https&sv=2021-06-08&sr=b&sig=%2BYr%2FowOPJfmdtr9Riz2j3QFsthTDrWKgjXqOgI4mBf0%3D", 
-                            "Lighter image": "lighter_test_set_2of5.jpg"
+    "daniel da cruz": {"Lighter image": "lighter_test_set_1of5.jpg"}, 
+    "helena da cruz": {"Lighter image": "lighter_test_set_2of5.jpg"}, 
+    "john doe": {"Lighter image": "lighter_test_set_3of5.jpg"}, 
+    "mark musk": {"Lighter image": "lighter_test_set_4of5.jpg"}, 
+    "noah taleb": {"Lighter image": "lighter_test_set_5of5.jpg"}
     }
 
-}
-
 response_dictionary = {
-    'successful response': "Dear {}, \n You are welcome to flight # A123 leaving at 4:30 PM from San Francisco to Chicago. \n\Your seat number is A5, and it is confirmed. \nWe did not find a prohibited item (lighter) in your carry-on baggage, \nthanks for following the procedure. \nYour identity is verified so please board the plane. "
+    "successful response": "Dear {}, \nYou are welcome to flight # {} leaving at {} from {} to {}. \nYour seat number is {}, and it is confirmed. \nWe did not find a prohibited item (lighter) in your carry-on baggage, \nthanks for following the procedure. \nYour identity is verified so please board the plane. ",
+    "lighter found response": "Dear {}, \nYou are welcome to flight # {} leaving at {} from {} to {}. \nYour seat number is {}, and it is confirmed. \nWe have found a prohibited item in your carry-on baggage, and it is flagged for removal. \nYour identity is verified. However, your baggage verification failed, so please see a customer service representative.",
+    "face identification failed response": "Dear {}, \nYou are welcome to flight # {} leaving at {} from {} to {}. \nYour seat number is {}, and it is confirmed. \nWe did not find a prohibited item (lighter) in your carry-on baggage. \nThanks for following the procedure. \nYour identity could not be verified. Please see a customer service representative.",
+    "boarding pass validation failed response": "Dear Sir/Madam, \nSome of the information in your boarding pass does not match the flight manifest data, so you cannot board the plane. \nPlease see a customer service representative.", 
+    "ID validation failed response": "Dear Sir/Madam, \nSome of the information on your ID card does not match the flight manifest data, so you cannot board the plane. \nPlease see a customer service representative."
 }
-
 
 flight_manifest_dictonary = {
         "daniel da cruz": {
-                            "Passenger Name": "Daniel da Cruz", 
+                            "Passenger Name": "daniel da cruz", 
                             "Date of Birth": datetime.date(1995, 8, 29),
                             "Carrier": "ZA", 
                             "Flight No.": 619, 
@@ -108,7 +106,7 @@ flight_manifest_dictonary = {
     }, 
 
         'helena da cruz': {
-                            "Passenger Name": "Helena da Cruz", 
+                            "Passenger Name": "helena da cruz", 
                             "Date of Birth": datetime.date(2000, 4, 7),
                             "Carrier": "ZA", 
                             "Flight No.": 619, 
@@ -128,7 +126,7 @@ flight_manifest_dictonary = {
                             "BoardingPassValidation": False
                 }, 
         'john doe': {
-                            "Passenger Name": "John Doe", 
+                            "Passenger Name": "john doe", 
                             "Date of Birth": datetime.date(1980, 2, 5),
                             "Carrier": "ZA", 
                             "Flight No.": 619, 
@@ -148,7 +146,7 @@ flight_manifest_dictonary = {
                             "BoardingPassValidation": False
     }, 
         'mark musk': {
-                            "Passenger Name": "Mark Musk", 
+                            "Passenger Name": "mark musk", 
                             "Date of Birth": datetime.date(1989, 2, 8),
                             "Carrier": "ZA", 
                             "Flight No.": 420, 
@@ -168,7 +166,7 @@ flight_manifest_dictonary = {
                             "BoardingPassValidation": False
     }, 
         'noah taleb': {
-                            "Passenger Name": "Noah Taleb", 
+                            "Passenger Name": "noah taleb", 
                             "Date of Birth": datetime.date(1968, 2, 8),
                             "Carrier": "ZA", 
                             "Flight No.": 820, 
@@ -202,8 +200,8 @@ digital_video_directory = "./data/digital-video-sample/"
 thumbnail_directory = "./data/ai-generated-thumbnails/"
 
 print("Hello welcome to the Airport of the future! ")
-first_name = 'helena' #input("Please enter your first name: ")
-second_name = 'da cruz' # input("Please enter your second name: ")
+first_name = input("Please enter your first name: ")
+second_name = input("Please enter your second name: ")
 full_name = (first_name + " " + second_name).lower()
 altered_full_name = "-".join(full_name.lower().split())
 
@@ -278,46 +276,82 @@ if full_name in flight_manifest_dictonary:
     print("Please proceed to baggage declaration...")
     local_image_path = r'data/lighter_test_images'
     with open(os.path.join (local_image_path,  boarding_dictionary[full_name]['Lighter image']), "rb") as test_data:
-        results = predictor.detect_image(project_id, publish_iteration_name, test_data.read())
+        results = predictor.detect_image(lighter_detection_dictionary["project_id"], lighter_detection_dictionary["publish_iteration_name"], test_data.read())
     lighter_probs = results.predictions[0].probability
     
     # Flight Manifest Validation
-    for i in range(len(flight_manifest)):
+    flight_manifest_person_index = flight_manifest[flight_manifest['Passenger Name'] == full_name].index[0]
     # Name Validation
-        if (flight_manifest.loc[i, 'Passenger Name'].lower() == (digital_id_results[0].fields['FirstName'].value + " " + digital_id_results[0].fields['LastName'].value).lower()) \
-        and (flight_manifest.loc[i, 'Passenger Name'].lower() == ((boarding_pass_results[0].fields['Passenger Name'].value).lower())):
-            flight_manifest.loc[i, 'NameValidation'] = True  
+    if (flight_manifest.loc[flight_manifest_person_index, 'Passenger Name'].lower() == (digital_id_results[0].fields['FirstName'].value + " " + digital_id_results[0].fields['LastName'].value).lower()) \
+    and (flight_manifest.loc[flight_manifest_person_index, 'Passenger Name'].lower() == ((boarding_pass_results[0].fields['Passenger Name'].value).lower())):
+        flight_manifest.loc[flight_manifest_person_index, 'NameValidation'] = True  
         
-        # Date of Birth Validation: 
-        if (flight_manifest.loc[i, 'Date of Birth'] == (digital_id_results[0].fields['DateOfBirth'].value)):
-            flight_manifest.loc[i, 'DoB Validation'] = True 
+    # Date of Birth Validation: 
+    if (flight_manifest.loc[flight_manifest_person_index, 'Date of Birth'] == (digital_id_results[0].fields['DateOfBirth'].value)):
+        flight_manifest.loc[flight_manifest_person_index, 'DoB Validation'] = True 
         
         # Boarding Pass Validation
-        if (flight_manifest.loc[i, 'Carrier'] == boarding_pass_results[0].fields['Flight Carrier'].value) \
-        and (flight_manifest.loc[i, 'Flight No.'] == int(boarding_pass_results[0].fields['Flight Number'].value)) \
-        and (flight_manifest.loc[i, 'Class'] == boarding_pass_results[0].fields['Flight Class'].value) \
-        and (flight_manifest.loc[i, 'From'] == boarding_pass_results[0].fields['Departure Location'].value) \
-        and (flight_manifest.loc[i, 'To'] == boarding_pass_results[0].fields['Arrival Location'].value) \
-        and (flight_manifest.loc[i, 'Date'] == boarding_pass_results[0].fields['Date'].value) \
-        and (flight_manifest.loc[i, 'Baggage'] == boarding_pass_results[0].fields['Baggage Allowance'].value) \
-        and (flight_manifest.loc[i, 'Seat'] == boarding_pass_results[0].fields['Seat Allocation'].value) \
-        and (flight_manifest.loc[i, 'Gate'] == boarding_pass_results[0].fields['Boarding Gate'].value) \
-        and (flight_manifest.loc[i, 'Boarding Time'] == boarding_pass_results[0].fields['Boarding Time.'].value) \
-        and (flight_manifest.loc[i, 'Ticket No.'] == boarding_pass_results[0].fields['Ticket Number'].value):
-            flight_manifest.loc[i, 'BoardingPassValidation'] = True
+    if (flight_manifest.loc[flight_manifest_person_index, 'Carrier'] == boarding_pass_results[0].fields['Flight Carrier'].value) \
+    and (flight_manifest.loc[flight_manifest_person_index, 'Flight No.'] == int(boarding_pass_results[0].fields['Flight Number'].value)) \
+    and (flight_manifest.loc[flight_manifest_person_index, 'Class'] == boarding_pass_results[0].fields['Flight Class'].value) \
+    and (flight_manifest.loc[flight_manifest_person_index, 'From'] == boarding_pass_results[0].fields['Departure Location'].value) \
+    and (flight_manifest.loc[flight_manifest_person_index, 'To'] == boarding_pass_results[0].fields['Arrival Location'].value) \
+    and (flight_manifest.loc[flight_manifest_person_index, 'Date'] == boarding_pass_results[0].fields['Date'].value) \
+    and (flight_manifest.loc[flight_manifest_person_index, 'Baggage'] == boarding_pass_results[0].fields['Baggage Allowance'].value) \
+    and (flight_manifest.loc[flight_manifest_person_index, 'Seat'] == boarding_pass_results[0].fields['Seat Allocation'].value) \
+    and (flight_manifest.loc[flight_manifest_person_index, 'Gate'] == boarding_pass_results[0].fields['Boarding Gate'].value) \
+    and (flight_manifest.loc[flight_manifest_person_index, 'Boarding Time'] == boarding_pass_results[0].fields['Boarding Time.'].value) \
+    and (flight_manifest.loc[flight_manifest_person_index, 'Ticket No.'] == boarding_pass_results[0].fields['Ticket Number'].value):
+        flight_manifest.loc[flight_manifest_person_index, 'BoardingPassValidation'] = True
 
         # Person Validation
-        verify_result_same = face_client.face.verify_face_to_face(detected_face_id, person_group_face_id)
-        if verify_result_same.is_identical:
-                flight_manifest.loc[i, 'PersonValidation'] = True 
+    verify_result_same = face_client.face.verify_face_to_face(detected_face_id, person_group_face_id)
+    if verify_result_same.is_identical:
+            flight_manifest.loc[flight_manifest_person_index, 'PersonValidation'] = True 
 
         # Luggage Validation
-        if lighter_probs  < 0.6:
-            flight_manifest.loc[i, 'LuggageValidation'] = True
+    if lighter_probs  < 0.6:
+        flight_manifest.loc[flight_manifest_person_index, 'LuggageValidation'] = True
         
-        if flight_manifest.loc[i, "DoB Validation":"BoardingPassValidation"].all() == True:
-            print(response_dictionary["successful response"].format(first_name.capitalize()))
-
+    if flight_manifest.loc[flight_manifest_person_index, "DoB Validation":"BoardingPassValidation"].all() == True:
+        print(response_dictionary["successful response"].format(first_name.capitalize(), 
+                                                                boarding_pass_results[0].fields['Flight Number'].value, 
+                                                                boarding_pass_results[0].fields['Boarding Time.'].value, 
+                                                                boarding_pass_results[0].fields['Departure Location'].value, 
+                                                                boarding_pass_results[0].fields['Arrival Location'].value, 
+                                                                boarding_pass_results[0].fields['Seat Allocation'].value))
+        
+    if flight_manifest.loc[flight_manifest_person_index, "NameValidation"] == False:
+        print(response_dictionary["ID validation failed response"].format(first_name.capitalize(), 
+                                                                        boarding_pass_results[0].fields['Flight Number'].value, 
+                                                                        boarding_pass_results[0].fields['Boarding Time.'].value, 
+                                                                        boarding_pass_results[0].fields['Departure Location'].value, 
+                                                                        boarding_pass_results[0].fields['Arrival Location'].value, 
+                                                                        boarding_pass_results[0].fields['Seat Allocation'].value))
+    
+    if flight_manifest.loc[flight_manifest_person_index, "PersonValidation"] == False:
+        print(response_dictionary["face identification failed response"].format(first_name.capitalize(), 
+                                                                boarding_pass_results[0].fields['Flight Number'].value, 
+                                                                boarding_pass_results[0].fields['Boarding Time.'].value, 
+                                                                boarding_pass_results[0].fields['Departure Location'].value, 
+                                                                boarding_pass_results[0].fields['Arrival Location'].value, 
+                                                                boarding_pass_results[0].fields['Seat Allocation'].value))
+    
+    if flight_manifest.loc[flight_manifest_person_index, "BoardingPassValidation"] == False:
+        print(response_dictionary["boarding pass validation failed response"].format(first_name.capitalize(), 
+                                                                boarding_pass_results[0].fields['Flight Number'].value, 
+                                                                boarding_pass_results[0].fields['Boarding Time.'].value, 
+                                                                boarding_pass_results[0].fields['Departure Location'].value, 
+                                                                boarding_pass_results[0].fields['Arrival Location'].value, 
+                                                                boarding_pass_results[0].fields['Seat Allocation'].value))
+    
+    if flight_manifest.loc[flight_manifest_person_index, "LuggageValidation"] == False:
+        print(response_dictionary["lighter found response"].format(first_name.capitalize(), 
+                                                                boarding_pass_results[0].fields['Flight Number'].value, 
+                                                                boarding_pass_results[0].fields['Boarding Time.'].value, 
+                                                                boarding_pass_results[0].fields['Departure Location'].value, 
+                                                                boarding_pass_results[0].fields['Arrival Location'].value, 
+                                                                boarding_pass_results[0].fields['Seat Allocation'].value))
 
 else:
     print("Sorry this name does not appear on the flight bookings list!")
