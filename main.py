@@ -71,11 +71,19 @@ iteration_id = "7e20214d-3830-4a7a-8dee-9bcf1670f580"
 boarding_dictionary = {
     "daniel da cruz": {
                             "digital id url": "https://udacityestorageaccount7.blob.core.windows.net/myblobcontainer7/ca-dl-daniel-da-cruz.png?sp=r&st=2022-11-11T04:20:07Z&se=2022-11-18T13:20:07Z&spr=https&sv=2021-06-08&sr=b&sig=%2BYr%2FowOPJfmdtr9Riz2j3QFsthTDrWKgjXqOgI4mBf0%3D", 
-                            "Lighter image": "lighter_test_set_1of5.jpg",
-                            "Carrier": "ZA"
+                            "Lighter image": "lighter_test_set_1of5.jpg"
+    }, 
+    "helena da cruz": {
+                            "digital id url": "https://udacityestorageaccount7.blob.core.windows.net/myblobcontainer7/ca-dl-daniel-da-cruz.png?sp=r&st=2022-11-11T04:20:07Z&se=2022-11-18T13:20:07Z&spr=https&sv=2021-06-08&sr=b&sig=%2BYr%2FowOPJfmdtr9Riz2j3QFsthTDrWKgjXqOgI4mBf0%3D", 
+                            "Lighter image": "lighter_test_set_2of5.jpg"
     }
 
 }
+
+response_dictionary = {
+    'successful response': "Dear {}, \n You are welcome to flight # A123 leaving at 4:30 PM from San Francisco to Chicago. \n\Your seat number is A5, and it is confirmed. \nWe did not find a prohibited item (lighter) in your carry-on baggage, \nthanks for following the procedure. \nYour identity is verified so please board the plane. "
+}
+
 
 flight_manifest_dictonary = {
         "daniel da cruz": {
@@ -181,6 +189,12 @@ flight_manifest_dictonary = {
     }
 
 }
+# Flight manifest
+flight_manifest = pd.DataFrame(columns=["Passenger Name", "Date of Birth", "Carrier", "Flight No.", "Class", "From", "To", "Date", "Baggage", "Seat", "Gate", "Boarding Time", "Ticket No.", "DoB Validation", "PersonValidation", "LuggageValidation", "NameValidation", "BoardingPassValidation"]) 
+flight_manifest_list = [flight_manifest_dictonary[key] for key in flight_manifest_dictonary.keys()]
+for i in flight_manifest_list: 
+    flight_manifest = flight_manifest.append(i, ignore_index=True)
+
 digital_id_directory = "./data/digital_id_template/Test-Images/ca-dl-"
 custom_boarding_pass_id = "3101438c-b68f-4695-8a70-97e3eef7121a"
 boarding_pass_directory = "./data/boarding_pass_template/Test-Images/"
@@ -188,9 +202,9 @@ digital_video_directory = "./data/digital-video-sample/"
 thumbnail_directory = "./data/ai-generated-thumbnails/"
 
 print("Hello welcome to the Airport of the future! ")
-first_name = 'daniel' #input("Please enter your first name: ")
+first_name = 'helena' #input("Please enter your first name: ")
 second_name = 'da cruz' # input("Please enter your second name: ")
-full_name = first_name + " " + second_name
+full_name = (first_name + " " + second_name).lower()
 altered_full_name = "-".join(full_name.lower().split())
 
 if full_name in flight_manifest_dictonary:
@@ -202,9 +216,7 @@ if full_name in flight_manifest_dictonary:
     digital_id_results = digital_id_info.result()
     print("Thank you for presenting your ID. Proceed to show your boarding pass.")
     print("")
-    print(f"digital_id_results {digital_id_results[0].fields['FirstName'].value}")
     
-
     # Extract boarding pass information
     print("Analyzing boarding pass...")
     with open(boarding_pass_directory + altered_full_name + ".pdf", "rb") as test_data:
@@ -212,7 +224,6 @@ if full_name in flight_manifest_dictonary:
     boarding_pass_results = boarding_pass_info.result()
     print("Boarding pass successfully analyzed.")
     print("")
-    print(f"Boarding pass {boarding_pass_results[0].fields['Passenger Name'].value}")
 
     # Extract facial features from video 
     uploaded_video_id = "cb51eabcc6"
@@ -270,12 +281,6 @@ if full_name in flight_manifest_dictonary:
         results = predictor.detect_image(project_id, publish_iteration_name, test_data.read())
     lighter_probs = results.predictions[0].probability
     
-    # Flight manifest
-    flight_manifest = pd.DataFrame(columns=["Passenger Name", "Date of Birth", "Carrier", "Flight No.", "Class", "From", "To", "Date", "Baggage", "Seat", "Gate", "Boarding Time", "Ticket No.", "DoB Validation", "PersonValidation", "LuggageValidation", "NameValidation", "BoardingPassValidation"]) 
-    flight_manifest_list = [flight_manifest_dictonary["daniel da cruz"], flight_manifest_dictonary["helena da cruz"], flight_manifest_dictonary["john doe"], flight_manifest_dictonary["mark musk"], flight_manifest_dictonary["noah taleb"]]
-    for i in flight_manifest_list: 
-        flight_manifest = flight_manifest.append(i, ignore_index=True)
-    
     # Flight Manifest Validation
     for i in range(len(flight_manifest)):
     # Name Validation
@@ -309,6 +314,10 @@ if full_name in flight_manifest_dictonary:
         # Luggage Validation
         if lighter_probs  < 0.6:
             flight_manifest.loc[i, 'LuggageValidation'] = True
+        
+        if flight_manifest.loc[i, "DoB Validation":"BoardingPassValidation"].all() == True:
+            print(response_dictionary["successful response"].format(first_name.capitalize()))
+
 
 else:
     print("Sorry this name does not appear on the flight bookings list!")
