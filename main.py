@@ -1,5 +1,6 @@
 import os
 import io
+import time
 import datetime
 import requests
 import pandas as pd
@@ -24,6 +25,8 @@ from azure.cognitiveservices.vision.customvision.training.models import ImageFil
 from msrest.authentication import ApiKeyCredentials
 from azure.core.exceptions import ResourceNotFoundError
 from azure.ai.formrecognizer import FormTrainingClient
+from utils import build_person_group, detect_faces, detect_face_from_any_url, list_all_faces_from_detected_face_object, perform_prediction
+
 load_dotenv()
 
 CONFIG = {
@@ -61,187 +64,237 @@ video_analysis = VideoIndexer(
     vi_subscription_key=CONFIG['SUBSCRIPTION_KEY']
 )
 
-list_of_id_results = []
-test_images = [file for file in glob.glob("./data/digital_id_template/Test-Images/ca-dl-*.png")]
-for image_path in test_images:
-        with open(image_path, "rb") as test_data:
-                results = form_recognizer_client.begin_recognize_identity_documents(test_data, content_type="image/png")
-        list_of_id_results.append(results.result())
+publish_iteration_name = "lighter-detection-model-v10"
+project_id = "6bbf9a05-17c3-4f1f-acaf-05b4d1bafd69"
+iteration_id = "7e20214d-3830-4a7a-8dee-9bcf1670f580"
 
-list_of_ids = []
-for i in list_of_id_results:
-    dict_results = {}
-    for key, value in (i[0].fields).items():
-        dict_results[key] = value.value
-    list_of_ids.append(dict_results)
+boarding_dictionary = {
+    "daniel da cruz": {
+                            "digital id url": "https://udacityestorageaccount7.blob.core.windows.net/myblobcontainer7/ca-dl-daniel-da-cruz.png?sp=r&st=2022-11-11T04:20:07Z&se=2022-11-18T13:20:07Z&spr=https&sv=2021-06-08&sr=b&sig=%2BYr%2FowOPJfmdtr9Riz2j3QFsthTDrWKgjXqOgI4mBf0%3D", 
+                            "Lighter image": "lighter_test_set_1of5.jpg",
+                            "Carrier": "ZA"
+    }
 
-training_images_url = "https://udacitystorageaccount111.blob.core.windows.net/custom-form?sp=racwdl&st=2022-11-07T02:19:28Z&se=2022-11-14T11:19:28Z&spr=https&sv=2021-06-08&sr=c&sig=WAIHYrZhno1sSfIWH2kFY2G35nxwQHDXGHqIHPmKj8g%3D"
-training_process = form_training_client.begin_training(training_images_url, use_training_labels=True)
-custom_model = training_process.result()
+}
 
-custom_model_info = form_training_client.get_custom_model(model_id=custom_model.model_id)
-print("Model ID: {}".format(custom_model_info.model_id))
-print("Status: {}".format(custom_model_info.status))
-print("Training started on: {}".format(custom_model_info.training_started_on))
-print("Training completed on: {}".format(custom_model_info.training_completed_on))
+flight_manifest_dictonary = {
+        "daniel da cruz": {
+                            "Passenger Name": "Daniel da Cruz", 
+                            "Date of Birth": datetime.date(1995, 8, 29),
+                            "Carrier": "ZA", 
+                            "Flight No.": 619, 
+                            "Class": "A", 
+                            "From": "Rustenburg", 
+                            "To": "Cape Town", 
+                            "Date": "November 11, 2022", 
+                            "Baggage": "YES", 
+                            "Seat": "30A", 
+                            "Gate": "H2", 
+                            "Boarding Time": "11:00 PM CAT", 
+                            "Ticket No.": "ETK-737268572620C", 
+                            "DoB Validation": False, 
+                            "PersonValidation": False, 
+                            "LuggageValidation": False, 
+                            "NameValidation": False, 
+                            "BoardingPassValidation": False
+    }, 
 
-list_of_boarding_pass_results = []
+        'helena da cruz': {
+                            "Passenger Name": "Helena da Cruz", 
+                            "Date of Birth": datetime.date(2000, 4, 7),
+                            "Carrier": "ZA", 
+                            "Flight No.": 619, 
+                            "Class": "A", 
+                            "From": "Rustenburg", 
+                            "To": "Cape Town", 
+                            "Date": "November 11, 2022", 
+                            "Baggage": "YES", 
+                            "Seat": "31A", 
+                            "Gate": "H2", 
+                            "Boarding Time": "11:00 PM CAT", 
+                            "Ticket No.": "ETK-737268572620C", 
+                            "DoB Validation": False, 
+                            "PersonValidation": False, 
+                            "LuggageValidation": False, 
+                            "NameValidation": False, 
+                            "BoardingPassValidation": False
+                }, 
+        'john doe': {
+                            "Passenger Name": "John Doe", 
+                            "Date of Birth": datetime.date(1980, 2, 5),
+                            "Carrier": "ZA", 
+                            "Flight No.": 619, 
+                            "Class": "A", 
+                            "From": "Johannesburg", 
+                            "To": "Cape Town", 
+                            "Date": "November 11, 2022", 
+                            "Baggage": "YES", 
+                            "Seat": "40A", 
+                            "Gate": "H2", 
+                            "Boarding Time": "11:00 PM CAT", 
+                            "Ticket No.": "ETK-737268572620C", 
+                            "DoB Validation": False, 
+                            "PersonValidation": False, 
+                            "LuggageValidation": False, 
+                            "NameValidation": False, 
+                            "BoardingPassValidation": False
+    }, 
+        'mark musk': {
+                            "Passenger Name": "Mark Musk", 
+                            "Date of Birth": datetime.date(1989, 2, 8),
+                            "Carrier": "ZA", 
+                            "Flight No.": 420, 
+                            "Class": "E", 
+                            "From": "New York", 
+                            "To": "Austin", 
+                            "Date": "November 20, 2022", 
+                            "Baggage": "YES", 
+                            "Seat": "15F", 
+                            "Gate": "I2", 
+                            "Boarding Time": "12:00 PM PST", 
+                            "Ticket No.": "ETK-737268572620C", 
+                            "DoB Validation": False, 
+                            "PersonValidation": False, 
+                            "LuggageValidation": False, 
+                            "NameValidation": False, 
+                            "BoardingPassValidation": False
+    }, 
+        'noah taleb': {
+                            "Passenger Name": "Noah Taleb", 
+                            "Date of Birth": datetime.date(1968, 2, 8),
+                            "Carrier": "ZA", 
+                            "Flight No.": 820, 
+                            "Class": "D", 
+                            "From": "New York", 
+                            "To": "San Francisco", 
+                            "Date": "November 15, 2022", 
+                            "Baggage": "YES", 
+                            "Seat": "24B", 
+                            "Gate": "I2", 
+                            "Boarding Time": "12:00 PM PST", 
+                            "Ticket No.": "ETK-737268572620C", 
+                            "DoB Validation": False, 
+                            "PersonValidation": False, 
+                            "LuggageValidation": False, 
+                            "NameValidation": False, 
+                            "BoardingPassValidation": False
+    }
 
-test_images = [file for file in glob.glob("./data/boarding_pass_template/Test-Images/*.pdf")]
-for image_path in test_images:
-        print(image_path)
-        with open(image_path, "rb") as test_data:
-                results = form_recognizer_client.begin_recognize_custom_forms(model_id=custom_model_info.model_id, form = test_data, content_type='application/pdf')
-        list_of_boarding_pass_results.append(results.result())
-
-boarding_pass_results = []
-for i in list_of_boarding_pass_results:
-    dict_results = {}
-    for key, value in (i[0].fields).items():
-        dict_results[key] = value.value
-    boarding_pass_results.append(dict_results)
-
-# Upload to Video Analzyer from local disk
-uploaded_video_id = video_analysis.upload_to_video_indexer(
-   input_filename=r'data\digital-video-sample\Azure-video-submission.mp4',
-   video_name='daniel-da-cruz-boarding-pass',  # unique identifier for video in Video Indexer platform
-   video_language='English'
-)
-time.sleep(300)
-info = video_analysis.get_video_info(uploaded_video_id, video_language='English')
-
-images = []
-img_raw = []
-img_strs = []
-thumbnails = []
-for each_thumb in info['videos'][0]['insights']['faces'][0]['thumbnails']:
-    if 'fileName' in each_thumb and 'id' in each_thumb:
-        file_name = each_thumb['fileName']
-        thumb_id = each_thumb['id']
-        img_code = video_analysis.get_thumbnail_from_video_indexer(uploaded_video_id,  thumb_id)
-        img_strs.append(img_code)
-        img_stream = io.BytesIO(img_code)
-        img_raw.append(img_stream)
-        img = Image.open(img_stream)
-        images.append(img)
-        thumbnails.append(thumb_id)
-
+}
+digital_id_directory = "./data/digital_id_template/Test-Images/ca-dl-"
+custom_boarding_pass_id = "3101438c-b68f-4695-8a70-97e3eef7121a"
+boarding_pass_directory = "./data/boarding_pass_template/Test-Images/"
+digital_video_directory = "./data/digital-video-sample/"
 thumbnail_directory = "./data/ai-generated-thumbnails/"
-i = 1
-for img in images:
-    img.save(thumbnail_directory + 'human-face' + str(i) + '.jpg')
-    i= i+ 1
-print("Thumbnails saved to {}".format(thumbnail_directory))
 
-img_code = video_analysis.get_thumbnail_from_video_indexer(uploaded_video_id,  thumbnails[0])
+print("Hello welcome to the Airport of the future! ")
+first_name = input("Please enter your first name: ")
+second_name = input("Please enter your second name: ")
+full_name = first_name + " " + second_name
+altered_full_name = "-".join(full_name.lower().split())
 
-PERSON_GROUP_ID = str(uuid.uuid4())
-person_group_name = 'daniel'
-face_client = FaceClient(CONFIG['FACIAL_RECOGNITION_ENDPOINT'], CognitiveServicesCredentials(CONFIG['FACIAL_RECOGNITION_KEY']))
+if full_name in flight_manifest_dictonary:
+    print("Please present your ID")
+    time.sleep(5)
+    # Extract digital ID information
+    with open(digital_id_directory + altered_full_name + ".png", "rb") as test_data:
+                digital_id_info = form_recognizer_client.begin_recognize_identity_documents(test_data, content_type="image/png")
+    digital_id_results = digital_id_info.result()
 
-def build_person_group(client, person_group_id, pgp_name, directory):
-    for file in glob.glob(directory + '*.jpg'):
-        print(file)
-    human_face_images = [file for file in glob.glob('*.jpg') if file.startswith(directory + "human-face")]
-    print(human_face_images)
-    print('Create and build a person group...')
-    # Create empty Person Group. Person Group ID must be lower case, alphanumeric, and/or with '-', '_'.
-    print('Person group ID:', person_group_id)
-    client.person_group.create(person_group_id = person_group_id, name=person_group_id)
+    # Extract boarding pass information
+    with open(boarding_pass_directory + altered_full_name + ".pdf", "rb") as test_data:
+                boarding_pass_info = form_recognizer_client.begin_recognize_custom_forms(model_id=custom_boarding_pass_id, form = test_data, content_type='application/pdf')
+    boarding_pass_results = boarding_pass_info.result()
 
-    # Create a person group person.
-    human_person = client.person_group_person.create(person_group_id, pgp_name)
-    # Find all jpeg human images in working directory.
-    human_face_images = [file for file in glob.glob(directory + '*.jpg')]
-    # Add images to a Person object
-    for image_p in human_face_images:
-        with open(image_p, 'rb') as w:
-            client.person_group_person.add_face_from_stream(person_group_id, human_person.person_id, w)
+    # Extract facial features from video 
+    uploaded_video_id = video_analysis.upload_to_video_indexer(
+      input_filename=digital_video_directory + altered_full_name + ".mp4",
+      video_name=altered_full_name + "-boarding-pass",  # unique identifier for video in Video Indexer platform
+      video_language='English'
+    )
+    print("Please wait as we analyze your video...")
+    time.sleep(30)
+    print("Analysis complete.")
+    video_info = video_analysis.get_video_info(uploaded_video_id, video_language='English')
 
-    # Train the person group, after a Person object with many images were added to it.
-    client.person_group.train(person_group_id)
+    images = []
+    img_raw = []
+    img_strs = []
+    thumbnails = []
+    for each_thumb in video_info['videos'][0]['insights']['faces'][0]['thumbnails']:
+        if 'fileName' in each_thumb and 'id' in each_thumb:
+            file_name = each_thumb['fileName']
+            thumb_id = each_thumb['id']
+            img_code = video_analysis.get_thumbnail_from_video_indexer(uploaded_video_id,  thumb_id)
+            img_strs.append(img_code)
+            img_stream = io.BytesIO(img_code)
+            img_raw.append(img_stream)
+            img = Image.open(img_stream)
+            images.append(img)
+            thumbnails.append(thumb_id)
 
-    # Wait for training to finish.
-    while (True):
-        training_status = client.person_group.get_training_status(person_group_id)
-        print("Training status: {}.".format(training_status.status))
-        if (training_status.status is TrainingStatusType.succeeded):
-            break
-        elif (training_status.status is TrainingStatusType.failed):
-            client.person_group.delete(person_group_id=PERSON_GROUP_ID)
-            sys.exit('Training the person group has failed.')
-        time.sleep(5)
-        
-build_person_group(face_client, PERSON_GROUP_ID, person_group_name, "./data/ai-generated-thumbnails/")
+    name = video_info['name']
+    j = 1
+    for img in images:
+        img.save(thumbnail_directory + "{}".format(name) + '/human-face' + str(j) + '.jpg')
+        j +=1
 
-def detect_faces(client, query_images_list):
-    print('Detecting faces in query images list...')
+    # Build person group id
+    person_group_id = str(uuid.uuid4())
+    build_person_group(face_client, person_group_id, altered_full_name, "./data/ai-generated-thumbnails/{}/".format(altered_full_name + "-boarding-pass"))
+    test_images = [[file for file in glob.glob('./data/ai-generated-thumbnails/{}/*.jpg'.format(altered_full_name + "-boarding-pass"))][-1]]
+    person_group_face_id = detect_faces(face_client, test_images)
 
-    face_ids = {} # Keep track of the image ID and the related image in a dictionary
-    for image_name in query_images_list:
-        image = open(image_name, 'rb') # BufferedReader
-        print("Opening image: ", image.name)
-        time.sleep(5)
+    # Detect face 
+    source_faces_object = detect_face_from_any_url(face_client, digital_id_directory + altered_full_name + ".png")
+    detected_face = list_all_faces_from_detected_face_object(source_faces_object)
+    detected_face_id = detected_face[0].face_id
 
-        # Detect the faces in the query images list one at a time, returns list[DetectedFace]
-        faces = client.face.detect_with_stream(image)  
-
-        # Add all detected face IDs to a list
-        for face in faces:
-            print('Face ID', face.face_id, 'found in image', os.path.splitext(image.name)[0]+'.jpg')
-            # Add the ID to a dictionary with image name as a key.
-            # This assumes there is only one face per image (since you can't have duplicate keys)
-            face_ids[image.name] = face.face_id
-
-    return face_ids
-
-test_images = [file for file in glob.glob('./data/ai-generated-thumbnails/*.jpg')]
-ids = detect_faces(face_client, test_images)
-
-def getRectangle(faceDictionary):
-    rect = faceDictionary.face_rectangle
-    left = rect.left
-    top = rect.top
-    right = left + rect.width
-    bottom = top + rect.height
+    # Prediction on lighter image
+    local_image_path = r'data/lighter_test_images'
+    with open(os.path.join (local_image_path,  boarding_dictionary["daniel da cruz"]['Lighter image']), "rb") as test_data:
+        results = predictor.detect_image(project_id, publish_iteration_name, test_data.read())
+        lighter_probs = results.predictions[0].probability
     
-    return ((left, top), (right, bottom))
+    # Flight manifest
+    flight_manifest = pd.DataFrame(columns=["Passenger Name", "Date of Birth", "Carrier", "Flight No.", "Class", "From", "To", "Date", "Baggage", "Seat", "Gate", "Boarding Time", "Ticket No.", "DoB Validation", "PersonValidation", "LuggageValidation", "NameValidation", "BoardingPassValidation"]) 
+    flight_manifest_list = [flight_manifest_dictonary["daniel da cruz"], flight_manifest_dictonary, flight_manifest_dictonary, flight_manifest_dictonary, flight_manifest_dictonary]
+    for i in flight_manifest_list: 
+        flight_manifest = flight_manifest.append(i, ignore_index=True)
+    
+    # Flight Manifest Validation
+    for i in range(len(flight_manifest)):
+    # Name Validation
+        if (flight_manifest.loc[i, 'Passenger Name'].lower() == (digital_id_results['FirstName'] + " " + digital_id_results['LastName']).lower()) \
+        and (flight_manifest.loc[i, 'Passenger Name'].lower() == (boarding_pass_results['Passenger Name'].lower())):
+            flight_manifest.loc[i, 'NameValidation'] = True  
+        
+        # Date of Birth Validation: 
+        if (flight_manifest.loc[i, 'Date of Birth'] == (digital_id_results['DateOfBirth'])):
+            flight_manifest.loc[i, 'DoB Validation'] = True 
+        
+        # Boarding Pass Validation
+        if (flight_manifest.loc[i, 'Carrier'] == boarding_pass_results['Flight Carrier']) \
+        and (flight_manifest.loc[i, 'Flight No.'] == int(boarding_pass_results['Flight Number'])) \
+        and (flight_manifest.loc[i, 'Class'] == boarding_pass_results['Flight Class']) \
+        and (flight_manifest.loc[i, 'From'] == boarding_pass_results['Departure Location']) \
+        and (flight_manifest.loc[i, 'To'] == boarding_pass_results['Arrival Location']) \
+        and (flight_manifest.loc[i, 'Date'] == boarding_pass_results['Date']) \
+        and (flight_manifest.loc[i, 'Baggage'] == boarding_pass_results['Baggage Allowance']) \
+        and (flight_manifest.loc[i, 'Seat'] == boarding_pass_results['Seat Allocation']) \
+        and (flight_manifest.loc[i, 'Gate'] == boarding_pass_results['Boarding Gate']) \
+        and (flight_manifest.loc[i, 'Boarding Time'] == boarding_pass_results['Boarding Time.']) \
+        and (flight_manifest.loc[i, 'Ticket No.'] == boarding_pass_results['Ticket Number']):
+            flight_manifest.loc[i, 'BoardingPassValidation'] = True
 
-def drawFaceRectangles(source_file, detected_face_object) :
-    # Download the image from the url
-    response = requests.get(source_file)
-    img = Image.open(BytesIO(response.content))
-    # Draw a red box around every detected faces
-    draw = ImageDraw.Draw(img)
-    for face in detected_face_object:
-        draw.rectangle(getRectangle(face), outline='red', width = 2)
-    return img
+        # Person Validation
+        verify_result_same = face_client.face.verify_face_to_face(detected_face_id, person_group_face_id)
+        if verify_result_same.is_identical:
+                flight_manifest.loc[i, 'PersonValidation'] = True 
 
-image_url_daniel_da_cruz = "https://udacitystorageaccount111.blob.core.windows.net/digital-id/ca-dl-daniel-da-cruz.png?sp=r&st=2022-11-08T12:22:34Z&se=2022-11-15T20:22:34Z&spr=https&sv=2021-06-08&sr=b&sig=VJwPE5wDWXI6gU3WEMcdFwKSjrVTfa%2FsTl3L3jZnL5c%3D"
-image_url_helena_da_cruz = "https://udacitystorageaccount111.blob.core.windows.net/digital-id/ca-dl-helena-da-cruz.png?sp=r&st=2022-11-08T12:23:27Z&se=2022-11-15T20:23:27Z&spr=https&sv=2021-06-08&sr=b&sig=BlN0Le%2BcLXKxolJ6fj2DH3sIhNKi10d23DtOxlVqox0%3D"
-image_url_john_doe = "https://udacitystorageaccount111.blob.core.windows.net/digital-id/ca-dl-john-doe.png?sp=r&st=2022-11-08T12:24:46Z&se=2022-11-15T20:24:46Z&spr=https&sv=2021-06-08&sr=b&sig=%2FIgg7RM3H2DBKjsbsf3S1t%2BX0iA8pwxKOOlbKuXFEDM%3D"
-image_url_mark_musk = "https://udacitystorageaccount111.blob.core.windows.net/digital-id/ca-dl-mark-musk.png?sp=r&st=2022-11-08T12:25:36Z&se=2022-11-15T20:25:36Z&spr=https&sv=2021-06-08&sr=b&sig=%2F81fcgnXTo77uoiXPQSUEDlpZ7ZN8rlKPScFPliPbbg%3D"
-image_url_noah_taleb = "https://udacitystorageaccount111.blob.core.windows.net/digital-id/ca-dl-noah-taleb.png?sp=r&st=2022-11-08T12:26:04Z&se=2022-11-15T20:26:04Z&spr=https&sv=2021-06-08&sr=b&sig=yhBO8WyBRxwWI62nvfz%2FOM1eP34fGtWEPEW%2FbZ5eyoE%3D"
+        # Luggage Validation
+        if lighter_probs  < 0.6:
+            flight_manifest.loc[i, 'LuggageValidation'] = True
 
-def detect_face_with_attributes_02_from_any_url(selected_image_url):
-    detected_faces = face_client.face.detect_with_url(url=selected_image_url, 
-                                                     return_face_attributes=[
-                    'age',
-                    'gender',
-                    'headPose',
-                    'smile',
-                    'facialHair',
-                    'glasses',
-                    'emotion',
-                    'hair',
-                    'makeup',
-                    'occlusion',
-                    'accessories',
-                    'blur',
-                    'exposure',
-                    'noise'
-                ])
-    if not detected_faces:
-        raise Exception('No face detected from image {}'.format(selected_image_url))        
-    print('Total face(s) detected  from {}'.format(str(len(detected_faces))))
-    return detected_faces
+else:
+    print("Sorry this name does not appear on the flight bookings list!")
