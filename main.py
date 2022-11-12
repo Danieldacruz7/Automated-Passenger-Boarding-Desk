@@ -25,7 +25,7 @@ from azure.cognitiveservices.vision.customvision.training.models import ImageFil
 from msrest.authentication import ApiKeyCredentials
 from azure.core.exceptions import ResourceNotFoundError
 from azure.ai.formrecognizer import FormTrainingClient
-from utils import build_person_group, detect_faces, detect_face_from_any_url, list_all_faces_from_detected_face_object, perform_prediction
+from utils import build_person_group, detect_faces, detect_face_from_any_url, list_all_faces_from_detected_face_object
 
 load_dotenv()
 
@@ -195,12 +195,12 @@ altered_full_name = "-".join(full_name.lower().split())
 
 if full_name in flight_manifest_dictonary:
     print("Please present your ID")
-    time.sleep(5)
     # Extract digital ID information
     with open(digital_id_directory + altered_full_name + ".png", "rb") as test_data:
                 digital_id_info = form_recognizer_client.begin_recognize_identity_documents(test_data, content_type="image/png")
     digital_id_results = digital_id_info.result()
     print("Thank you for presenting your ID. Proceed to show your boarding pass.")
+    print("")
 
     # Extract boarding pass information
     print("Analyzing boarding pass...")
@@ -208,6 +208,7 @@ if full_name in flight_manifest_dictonary:
                 boarding_pass_info = form_recognizer_client.begin_recognize_custom_forms(model_id=custom_boarding_pass_id, form = test_data, content_type='application/pdf')
     boarding_pass_results = boarding_pass_info.result()
     print("Boarding pass successfully analyzed.")
+    print("")
 
     # Extract facial features from video 
     print("Please look at the screen. The camera will now capture facial features...")
@@ -217,8 +218,7 @@ if full_name in flight_manifest_dictonary:
       video_language='English'
     )
     print("Please wait as we analyze your video...")
-    time.sleep(30)
-    
+    time.sleep(120)
     video_info = video_analysis.get_video_info(uploaded_video_id, video_language='English')
 
     images = []
@@ -254,17 +254,18 @@ if full_name in flight_manifest_dictonary:
     detected_face = list_all_faces_from_detected_face_object(source_faces_object)
     detected_face_id = detected_face[0].face_id
     print("Analysis complete.")
+    print("")
 
     # Prediction on lighter image
     print("Please proceed to baggage declaration...")
     local_image_path = r'data/lighter_test_images'
     with open(os.path.join (local_image_path,  boarding_dictionary["daniel da cruz"]['Lighter image']), "rb") as test_data:
         results = predictor.detect_image(project_id, publish_iteration_name, test_data.read())
-        lighter_probs = results.predictions[0].probability
+    lighter_probs = results.predictions[0].probability
     
     # Flight manifest
     flight_manifest = pd.DataFrame(columns=["Passenger Name", "Date of Birth", "Carrier", "Flight No.", "Class", "From", "To", "Date", "Baggage", "Seat", "Gate", "Boarding Time", "Ticket No.", "DoB Validation", "PersonValidation", "LuggageValidation", "NameValidation", "BoardingPassValidation"]) 
-    flight_manifest_list = [flight_manifest_dictonary["daniel da cruz"], flight_manifest_dictonary, flight_manifest_dictonary, flight_manifest_dictonary, flight_manifest_dictonary]
+    flight_manifest_list = [flight_manifest_dictonary["daniel da cruz"], flight_manifest_dictonary["helena da cruz"], flight_manifest_dictonary["john doe"], flight_manifest_dictonary["mark musk"], flight_manifest_dictonary["noah taleb"]]
     for i in flight_manifest_list: 
         flight_manifest = flight_manifest.append(i, ignore_index=True)
     
