@@ -23,7 +23,6 @@ from msrest.authentication import ApiKeyCredentials
 from azure.core.exceptions import ResourceNotFoundError
 from azure.ai.formrecognizer import FormTrainingClient
 from utils import build_person_group, detect_faces, detect_face_from_any_url, list_all_faces_from_detected_face_object
-
 load_dotenv()
 
 CONFIG = {
@@ -77,6 +76,8 @@ boarding_dictionary = {
 
 response_dictionary = {
     "successful response": "Dear {}, \nYou are welcome to flight # {} leaving at {} from {} to {}. \nYour seat number is {}, and it is confirmed. \nWe did not find a prohibited item (lighter) in your carry-on baggage, \nthanks for following the procedure. \nYour identity is verified so please board the plane. ",
+    "failed response": "Dear Sir/Madam, \nSome of the information in your boarding pass does not match the flight manifest data, so you cannot board the plane. \nPlease see a customer service representative.",
+    "Date of birth incorrect response": "Dear Sir/Madam, \nThe date of birth on your ID card does not match the flight manifest data, so you cannot board the plane. \nPlease see a customer service representative.",
     "lighter found response": "Dear {}, \nYou are welcome to flight # {} leaving at {} from {} to {}. \nYour seat number is {}, and it is confirmed. \nWe have found a prohibited item in your carry-on baggage, and it is flagged for removal. \nYour identity is verified. However, your baggage verification failed, so please see a customer service representative.",
     "face identification failed response": "Dear {}, \nYou are welcome to flight # {} leaving at {} from {} to {}. \nYour seat number is {}, and it is confirmed. \nWe did not find a prohibited item (lighter) in your carry-on baggage. \nThanks for following the procedure. \nYour identity could not be verified. Please see a customer service representative.",
     "boarding pass validation failed response": "Dear Sir/Madam, \nSome of the information in your boarding pass does not match the flight manifest data, so you cannot board the plane. \nPlease see a customer service representative.", 
@@ -187,17 +188,24 @@ flight_manifest_dictonary = {
     }
 
 }
-# Flight manifest
-flight_manifest = pd.DataFrame(columns=["Passenger Name", "Date of Birth", "Carrier", "Flight No.", "Class", "From", "To", "Date", "Baggage", "Seat", "Gate", "Boarding Time", "Ticket No.", "DoB Validation", "PersonValidation", "LuggageValidation", "NameValidation", "BoardingPassValidation"]) 
-flight_manifest_list = [flight_manifest_dictonary[key] for key in flight_manifest_dictonary.keys()]
-for i in flight_manifest_list: 
-    flight_manifest = flight_manifest.append(i, ignore_index=True)
 
 digital_id_directory = "./data/digital_id_template/Test-Images/ca-dl-"
 custom_boarding_pass_id = "3101438c-b68f-4695-8a70-97e3eef7121a"
 boarding_pass_directory = "./data/boarding_pass_template/Test-Images/"
 digital_video_directory = "./data/digital-video-sample/"
 thumbnail_directory = "./data/ai-generated-thumbnails/"
+
+# Flight manifest
+import os.path
+if os.path.exists('flight_manifest.csv') == True: 
+    flight_manifest = pd.read_csv('flight_manifest.csv')
+    flight_manifest["Date of Birth"] = pd.to_datetime(flight_manifest["Date of Birth"], format="%Y/%m/%d")
+else:
+    flight_manifest = pd.DataFrame(columns=["Passenger Name", "Date of Birth", "Carrier", "Flight No.", "Class", "From", "To", "Date", "Baggage", "Seat", "Gate", "Boarding Time", "Ticket No.", "DoB Validation", "PersonValidation", "LuggageValidation", "NameValidation", "BoardingPassValidation"]) 
+    flight_manifest_list = [flight_manifest_dictonary[key] for key in flight_manifest_dictonary.keys()]
+    for i in flight_manifest_list: 
+        flight_manifest = flight_manifest.append(i, ignore_index=True)
+    flight_manifest["Date of Birth"] = pd.to_datetime(flight_manifest["Date of Birth"], format="%Y/%m/%d")
 
 print("Hello welcome to the Airport of the future! ")
 first_name = input("Please enter your first name: ")
@@ -224,18 +232,20 @@ if full_name in flight_manifest_dictonary:
     print("")
 
     # Extract facial features from video 
-    uploaded_video_id = "cb51eabcc6"
-    #print("Please look at the screen. The camera will now capture facial features...")
-    #uploaded_video_id = video_analysis.upload_to_video_indexer(
+    print("Please look at the screen. The camera will now capture facial features...")
+    uploaded_video_id = "f51e74fc26"
+    #video_analysis.upload_to_video_indexer(
     #  input_filename=digital_video_directory + altered_full_name + ".mp4",
     #  video_name=altered_full_name + "-boarding-pass",  # unique identifier for video in Video Indexer platform
     #  video_language='English'
     #)
+
     print("Please wait as we analyze your video...")
     video_info = video_analysis.get_video_info(uploaded_video_id, video_language='English')
     while video_info['state'] != 'Processed':
-        time.sleep(20)
+        #time.sleep(180)
         video_info = video_analysis.get_video_info(uploaded_video_id, video_language='English')
+        print(video_info['state'])
 
     images = []
     img_raw = []
@@ -312,46 +322,69 @@ if full_name in flight_manifest_dictonary:
         # Luggage Validation
     if lighter_probs  < 0.6:
         flight_manifest.loc[flight_manifest_person_index, 'LuggageValidation'] = True
+    
+    # Validation Check
+    count = 0
+    for column in flight_manifest:
+        if  flight_manifest.loc[flight_manifest_person_index, column] == False:
+            count += 1
+    
+    if count >= 2:
+        print(response_dictionary['failed response'])
+
+    else:
+        if flight_manifest.loc[flight_manifest_person_index, "DoB Validation":"BoardingPassValidation"].all() == True:
+            print(response_dictionary["successful response"].format(first_name.capitalize(), 
+                                                                    boarding_pass_results[0].fields['Flight Number'].value, 
+                                                                    boarding_pass_results[0].fields['Boarding Time.'].value, 
+                                                                    boarding_pass_results[0].fields['Departure Location'].value, 
+                                                                    boarding_pass_results[0].fields['Arrival Location'].value, 
+                                                                    boarding_pass_results[0].fields['Seat Allocation'].value))
         
-    if flight_manifest.loc[flight_manifest_person_index, "DoB Validation":"BoardingPassValidation"].all() == True:
-        print(response_dictionary["successful response"].format(first_name.capitalize(), 
-                                                                boarding_pass_results[0].fields['Flight Number'].value, 
-                                                                boarding_pass_results[0].fields['Boarding Time.'].value, 
-                                                                boarding_pass_results[0].fields['Departure Location'].value, 
-                                                                boarding_pass_results[0].fields['Arrival Location'].value, 
-                                                                boarding_pass_results[0].fields['Seat Allocation'].value))
+        if flight_manifest.loc[flight_manifest_person_index, "DoB Validation"] == False:
+            print(response_dictionary["Date of birth incorrect response"].format(first_name.capitalize(), 
+                                                                            boarding_pass_results[0].fields['Flight Number'].value, 
+                                                                            boarding_pass_results[0].fields['Boarding Time.'].value, 
+                                                                            boarding_pass_results[0].fields['Departure Location'].value, 
+                                                                            boarding_pass_results[0].fields['Arrival Location'].value, 
+                                                                            boarding_pass_results[0].fields['Seat Allocation'].value))
+            
+        if flight_manifest.loc[flight_manifest_person_index, "NameValidation"] == False:
+            print(response_dictionary["ID validation failed response"].format(first_name.capitalize(), 
+                                                                            boarding_pass_results[0].fields['Flight Number'].value, 
+                                                                            boarding_pass_results[0].fields['Boarding Time.'].value, 
+                                                                            boarding_pass_results[0].fields['Departure Location'].value, 
+                                                                            boarding_pass_results[0].fields['Arrival Location'].value, 
+                                                                            boarding_pass_results[0].fields['Seat Allocation'].value))
         
-    if flight_manifest.loc[flight_manifest_person_index, "NameValidation"] == False:
-        print(response_dictionary["ID validation failed response"].format(first_name.capitalize(), 
-                                                                        boarding_pass_results[0].fields['Flight Number'].value, 
-                                                                        boarding_pass_results[0].fields['Boarding Time.'].value, 
-                                                                        boarding_pass_results[0].fields['Departure Location'].value, 
-                                                                        boarding_pass_results[0].fields['Arrival Location'].value, 
-                                                                        boarding_pass_results[0].fields['Seat Allocation'].value))
+        if flight_manifest.loc[flight_manifest_person_index, "PersonValidation"] == False:
+            print(response_dictionary["face identification failed response"].format(first_name.capitalize(), 
+                                                                    boarding_pass_results[0].fields['Flight Number'].value, 
+                                                                    boarding_pass_results[0].fields['Boarding Time.'].value, 
+                                                                    boarding_pass_results[0].fields['Departure Location'].value, 
+                                                                    boarding_pass_results[0].fields['Arrival Location'].value, 
+                                                                    boarding_pass_results[0].fields['Seat Allocation'].value))
+        
+        if flight_manifest.loc[flight_manifest_person_index, "BoardingPassValidation"] == False:
+            print(response_dictionary["boarding pass validation failed response"].format(first_name.capitalize(), 
+                                                                    boarding_pass_results[0].fields['Flight Number'].value, 
+                                                                    boarding_pass_results[0].fields['Boarding Time.'].value, 
+                                                                    boarding_pass_results[0].fields['Departure Location'].value, 
+                                                                    boarding_pass_results[0].fields['Arrival Location'].value, 
+                                                                    boarding_pass_results[0].fields['Seat Allocation'].value))
+        
+        if flight_manifest.loc[flight_manifest_person_index, "LuggageValidation"] == False:
+            print(response_dictionary["lighter found response"].format(first_name.capitalize(), 
+                                                                    boarding_pass_results[0].fields['Flight Number'].value, 
+                                                                    boarding_pass_results[0].fields['Boarding Time.'].value, 
+                                                                    boarding_pass_results[0].fields['Departure Location'].value, 
+                                                                    boarding_pass_results[0].fields['Arrival Location'].value, 
+                                                                    boarding_pass_results[0].fields['Seat Allocation'].value))
     
-    if flight_manifest.loc[flight_manifest_person_index, "PersonValidation"] == False:
-        print(response_dictionary["face identification failed response"].format(first_name.capitalize(), 
-                                                                boarding_pass_results[0].fields['Flight Number'].value, 
-                                                                boarding_pass_results[0].fields['Boarding Time.'].value, 
-                                                                boarding_pass_results[0].fields['Departure Location'].value, 
-                                                                boarding_pass_results[0].fields['Arrival Location'].value, 
-                                                                boarding_pass_results[0].fields['Seat Allocation'].value))
     
-    if flight_manifest.loc[flight_manifest_person_index, "BoardingPassValidation"] == False:
-        print(response_dictionary["boarding pass validation failed response"].format(first_name.capitalize(), 
-                                                                boarding_pass_results[0].fields['Flight Number'].value, 
-                                                                boarding_pass_results[0].fields['Boarding Time.'].value, 
-                                                                boarding_pass_results[0].fields['Departure Location'].value, 
-                                                                boarding_pass_results[0].fields['Arrival Location'].value, 
-                                                                boarding_pass_results[0].fields['Seat Allocation'].value))
     
-    if flight_manifest.loc[flight_manifest_person_index, "LuggageValidation"] == False:
-        print(response_dictionary["lighter found response"].format(first_name.capitalize(), 
-                                                                boarding_pass_results[0].fields['Flight Number'].value, 
-                                                                boarding_pass_results[0].fields['Boarding Time.'].value, 
-                                                                boarding_pass_results[0].fields['Departure Location'].value, 
-                                                                boarding_pass_results[0].fields['Arrival Location'].value, 
-                                                                boarding_pass_results[0].fields['Seat Allocation'].value))
+
+    flight_manifest.to_csv("flight_manifest.csv", index=False)
 
 else:
     print("Sorry this name does not appear on the flight bookings list!")
