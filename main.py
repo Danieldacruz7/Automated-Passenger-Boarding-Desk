@@ -210,7 +210,7 @@ else:
 print("Hello welcome to the Airport of the future! ")
 first_name = input("Please enter your first name: ")
 second_name = input("Please enter your second name: ")
-full_name = (first_name + " " + second_name).lower()
+full_name = (first_name.strip() + " " + second_name.strip()).lower()
 altered_full_name = "-".join(full_name.lower().split())
 
 if full_name in flight_manifest_dictonary:
@@ -233,17 +233,16 @@ if full_name in flight_manifest_dictonary:
 
     # Extract facial features from video 
     print("Please look at the screen. The camera will now capture facial features...")
-    uploaded_video_id = "f51e74fc26"
-    #video_analysis.upload_to_video_indexer(
-    #  input_filename=digital_video_directory + altered_full_name + ".mp4",
-    #  video_name=altered_full_name + "-boarding-pass",  # unique identifier for video in Video Indexer platform
-    #  video_language='English'
-    #)
+    uploaded_video_id = video_analysis.upload_to_video_indexer(
+      input_filename=digital_video_directory + altered_full_name + ".mp4",
+      video_name=altered_full_name + "-boarding-pass",  # unique identifier for video in Video Indexer platform
+      video_language='English'
+    )
 
     print("Please wait as we analyze your video...")
     video_info = video_analysis.get_video_info(uploaded_video_id, video_language='English')
     while video_info['state'] != 'Processed':
-        #time.sleep(180)
+        #time.sleep(180) # Time to allow video processing to complete, and this is precautionary
         video_info = video_analysis.get_video_info(uploaded_video_id, video_language='English')
         print(video_info['state'])
 

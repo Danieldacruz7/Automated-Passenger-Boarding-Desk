@@ -1,6 +1,6 @@
-,Unnamed: 0,Unnamed: 0.1,Unnamed: 0.1.1,Unnamed: 0.1.1.1,Unnamed: 0.1.1.1.1,Unnamed: 0.1.1.1.1.1,Unnamed: 0.1.1.1.1.1.1,Unnamed: 0.1.1.1.1.1.1.1,Unnamed: 0.1.1.1.1.1.1.1.1,Unnamed: 0.1.1.1.1.1.1.1.1.1,Passenger Name,Date of Birth,Carrier,Flight No.,Class,From,To,Date,Baggage,Seat,Gate,Boarding Time,Ticket No.,DoB Validation,PersonValidation,LuggageValidation,NameValidation,BoardingPassValidation
-0,0,0,0,0,0,0,0,0,0,0,daniel da cruz,1995-08-29,ZA,619,A,Rustenburg,Cape Town,"November 11, 2022",YES,30A,H2,11:00 PM CAT,ETK-737268572620C,False,True,False,True,True
-1,1,1,1,1,1,1,1,1,1,1,helena da cruz,2000-04-07,ZA,619,A,Rustenburg,Cape Town,"November 11, 2022",YES,31A,H2,11:00 PM CAT,ETK-737268572620C,False,True,True,True,True
-2,2,2,2,2,2,2,2,2,2,2,john doe,1980-02-05,ZA,619,A,Johannesburg,Cape Town,"November 11, 2022",YES,40A,H2,11:00 PM CAT,ETK-737268572620C,True,True,True,True,True
-3,3,3,3,3,3,3,3,3,3,3,mark musk,1989-02-08,ZA,420,E,New York,Austin,"November 20, 2022",YES,15F,I2,12:00 PM PST,ETK-737268572620C,True,True,True,True,True
-4,4,4,4,4,4,4,4,4,4,4,noah taleb,1968-02-08,ZA,820,D,New York,San Francisco,"November 15, 2022",YES,24B,I2,12:00 PM PST,ETK-737268572620C,True,True,True,True,True
+Passenger Name,Date of Birth,Carrier,Flight No.,Class,From,To,Date,Baggage,Seat,Gate,Boarding Time,Ticket No.,DoB Validation,PersonValidation,LuggageValidation,NameValidation,BoardingPassValidation
+daniel da cruz,1995-08-29,ZA,619,A,Rustenburg,Cape Town,"November 11, 2022",YES,30A,H2,11:00 PM CAT,ETK-737268572620C,False,True,False,True,True
+helena da cruz,2000-04-07,ZA,619,A,Rustenburg,Cape Town,"November 11, 2022",YES,31A,H2,11:00 PM CAT,ETK-737268572620C,True,True,True,True,True
+john doe,1980-02-05,ZA,619,A,Johannesburg,Cape Town,"November 11, 2022",YES,40A,H2,11:00 PM CAT,ETK-737268572620C,True,True,True,True,True
+mark musk,1989-02-08,ZA,420,E,New York,Austin,"November 20, 2022",YES,15F,I2,12:00 PM PST,ETK-737268572620C,True,True,True,True,True
+noah taleb,1968-02-08,ZA,820,D,New York,San Francisco,"November 15, 2022",YES,24B,I2,12:00 PM PST,ETK-737268572620C,True,True,True,True,True
