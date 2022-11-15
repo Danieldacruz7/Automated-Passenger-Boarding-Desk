@@ -33,9 +33,16 @@ The following packages will be required for the project:
 ### File Descriptions
 
 - The Problem Definition & System Design folder contains the introduction to the project. This includes defining the problem, the dataflow chart and the architecture of the system. 
-- The notebooks 2. - 4. contain the workflow for each Azure service. 
+- The notebooks 2. - 4. contain the workflow for each Azure service: 
     - The digital text extractor notebook uses the prebuilt form recognizer model to extract information from the digital ID. A custom-built model was trained to extract information from the boarding passes.
     - The video analyzer uploads video footage to the Video Indexer service and extracts the facial features of the passenger to validate it against the digital ID. Face API service was used to extract facial image data from the digital ID. 
     - The object detection notebook trains a computer vision model to identify the presence of a prohibited item such as a lighter. This will rule out a passenger from carry the item onboard. 
-- The Data Folder contains all the images, boarding pass PDFs to test the system.      
+- The Data Folder contains all the images, boarding pass PDFs to run and test the system.      
+- The main.py file contains a command-line application for simulating the onboarding process.
 
+### How To Interact With the Project:
+
+To run the main application, run the following in the terminal: 
+'''
+python main.py
+''' 
