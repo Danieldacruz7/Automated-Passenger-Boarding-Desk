@@ -46,3 +46,12 @@ To run the main application, run the following in the terminal:
 ```
 python main.py
 ``` 
+Enter the first name and second name of a passenger on the flight manifest to kickstart the simulation. If the name does not exist, the passenger will be denied entry. This will not be necessary in real life but only to start the simulation process. 
+
+The other notebooks can be viewed to see the workflow of each Azure service and its outputs. 
+
+### Licensing, Authors, Acknowledgements: 
+
+- The facial images used in the dataset were generated using thispersondoesnotexist.com. 
+- The videos were created using myheritage.com/deep_nostalgia. 
+- The license to create this projectcan be found in the license.txt file acknowledging the rights of Udacity. 
