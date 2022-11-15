@@ -43,6 +43,6 @@ The following packages will be required for the project:
 ### How To Interact With the Project:
 
 To run the main application, run the following in the terminal: 
-'''
+```
 python main.py
-''' 
+``` 
