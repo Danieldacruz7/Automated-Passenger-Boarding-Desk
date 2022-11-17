@@ -15,6 +15,8 @@ The goal of the project is to create an automated means of allowing passengers t
 
 The system will be integrated with Microsoft Azure services. These services include Azure Form Recognizer, Azure Face APIs, Azure Custom Vision, Azure Video Indexer and Azure Blob Storage. The system will use a Python runtime to carry out the process. 
 
+![Architecture Diagram](./Screenshots/Architecture%20Diagram.png)
+
 The project is setup to act as a simulation of the process. The data used in the project is synthetic. The face images were created using generative adverserial networks to avoid privacy concerns. From the site thispersondoesnotexist.com, ultra-realistic images of people were created that do not exist. These images were photoshopped to replace the background to that of an airport. 
 
 After photoshopping the images, a free service on myheritage.com allows when to create realistic moving images using photos of faces. This created 15 second videos of a person moving their face - allowing one to create synthetic videos of people to simulate the onboarding process.   
