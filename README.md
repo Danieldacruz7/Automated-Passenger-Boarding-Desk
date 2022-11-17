@@ -19,7 +19,11 @@ The system will be integrated with Microsoft Azure services. These services incl
 
 The project is setup to act as a simulation of the process. The data used in the project is synthetic. The face images were created using generative adverserial networks to avoid privacy concerns. From the site thispersondoesnotexist.com, ultra-realistic images of people were created that do not exist. These images were photoshopped to replace the background to that of an airport. 
 
-After photoshopping the images, a free service on myheritage.com allows when to create realistic moving images using photos of faces. This created 15 second videos of a person moving their face - allowing one to create synthetic videos of people to simulate the onboarding process.   
+![ca-dl-mark-musk.png](./data/digital_id_template/Test-Images/ca-dl-mark-musk.png)
+
+After photoshopping the images, a free service on myheritage.com allows when to create realistic moving images using photos of faces. This created 15 second videos of a person moving their face - allowing one to create synthetic videos of people to simulate the onboarding process.  
+
+![Automated Passenger Kiosk Desk](./Screenshots/Automated%20Passenger%20Kiosk%20Desk.png)
 
 ### Installations: 
 The following packages will be required for the project: 
