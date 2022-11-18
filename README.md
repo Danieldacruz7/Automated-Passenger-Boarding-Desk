@@ -59,5 +59,5 @@ The other notebooks can be viewed to see the workflow of each Azure service and 
 ### Licensing, Authors, Acknowledgements: 
 
 - The facial images used in the dataset were generated using [thispersondoesnotexist.com](https://thispersondoesnotexist.com/). 
-- The videos were created using myheritage.com/deep_nostalgia. 
+- The videos were created using [myheritage.com/deep-nostalgia](https://www.myheritage.com/deep-nostalgia). 
 - The license to create this projectcan be found in the license.txt file acknowledging the rights of Udacity. 
