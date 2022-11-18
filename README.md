@@ -1,6 +1,6 @@
 # Automated-Passenger-Boarding-Desk
 
-A system for onboarding passengers using computer vision to extract key information form boarding passes, ID and facial recognition.  
+A system for onboarding passengers using computer vision to extract key information from boarding passes, ID and facial recognition.  
 
 ## Table of Contents
 1. The Project
@@ -11,7 +11,7 @@ A system for onboarding passengers using computer vision to extract key informat
 
 ### The Project: 
 
-The goal of the project is to create an automated means of allowing passengers to validate their boarding pass onto their flight without human assistance. The system will be implemented as a self-service kiosk that will use computer vision to extract key information from the boarding pass, digital ID and facial features of eaach passenger. 
+The goal of the project is to create an automated means of allowing passengers to validate their boarding pass onto their flight without human assistance. The system will be implemented as a self-service kiosk that will use computer vision to extract key information from the boarding pass, digital ID and facial features of each passenger. 
 
 The system will be integrated with Microsoft Azure services. These services include Azure Form Recognizer, Azure Face APIs, Azure Custom Vision, Azure Video Indexer and Azure Blob Storage. The system will use a Python runtime to carry out the process. 
 
@@ -21,7 +21,7 @@ The project is setup to act as a simulation of the process. The data used in the
 
 ![ca-dl-mark-musk.png](./data/digital_id_template/Test-Images/ca-dl-mark-musk.png)
 
-After photoshopping the images, a free service on myheritage.com allows when to create realistic moving images using photos of faces. This created 15 second videos of a person moving their face - allowing one to create synthetic videos of people to simulate the onboarding process.  
+After photoshopping the images, a free service on myheritage.com allows one to create realistic moving images using photos of faces. This created 15 second videos of a person moving their face - allowing one to create synthetic videos of people to simulate the onboarding process in an airport.  
 
 ![Automated Passenger Kiosk Desk](./Screenshots/Automated%20Passenger%20Kiosk%20Desk.png)
 
@@ -38,7 +38,7 @@ The following packages will be required for the project:
 
 ### File Descriptions
 
-- The Problem Definition & System Design folder contains the introduction to the project. This includes defining the problem, the dataflow chart and the architecture of the system. 
+- The [Problem Definition & System Design](./1.%20Problem%20Defintion%20%26%20System%20Design/) folder contains the introduction to the project. This includes defining the problem, the dataflow chart and the architecture of the system. 
 - The notebooks 2. - 4. contain the workflow for each Azure service: 
     - The digital text extractor notebook uses the prebuilt form recognizer model to extract information from the digital ID. A custom-built model was trained to extract information from the boarding passes.
     - The video analyzer uploads video footage to the Video Indexer service and extracts the facial features of the passenger to validate it against the digital ID. Face API service was used to extract facial image data from the digital ID. 
