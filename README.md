@@ -17,7 +17,7 @@ The system will be integrated with Microsoft Azure services. These services incl
 
 ![Architecture Diagram](./Screenshots/Architecture%20Diagram.png)
 
-The project is setup to act as a simulation of the process. The data used in the project is synthetic. The face images were created using generative adverserial networks to avoid privacy concerns. From the site thispersondoesnotexist.com, ultra-realistic images of people were created that do not exist. These images were photoshopped to replace the background to that of an airport. 
+The project is setup to act as a simulation of the process. The data used in the project is synthetic. The face images were created using generative adverserial networks to avoid privacy concerns. From the site [thispersondoesnotexist.com](https://thispersondoesnotexist.com/), ultra-realistic images of people were created that do not exist. These images were photoshopped to replace the background to that of an airport. 
 
 ![ca-dl-mark-musk.png](./data/digital_id_template/Test-Images/ca-dl-mark-musk.png)
 
@@ -44,7 +44,7 @@ The following packages will be required for the project:
     - The [video analyzer notebook](3.%20video_analyzer.ipynb) uploads video footage to the Video Indexer service and extracts the facial features of the passenger to validate it against the digital ID. Face API service was used to extract facial image data from the digital ID. 
     - The [object detection notebook](4.%20object-detection.ipynb) trains a computer vision model to identify the presence of a prohibited item such as a lighter. This will rule out a passenger from carry the item onboard. 
 - The [Data Folder](./data/) contains all the images, boarding pass PDFs to run and test the system.      
-- The main.py file contains a command-line application for simulating the onboarding process.
+- The **main.py** file contains a command-line application for simulating the onboarding process.
 
 ### How To Interact With the Project:
 
@@ -58,6 +58,6 @@ The other notebooks can be viewed to see the workflow of each Azure service and 
 
 ### Licensing, Authors, Acknowledgements: 
 
-- The facial images used in the dataset were generated using thispersondoesnotexist.com. 
+- The facial images used in the dataset were generated using [thispersondoesnotexist.com](https://thispersondoesnotexist.com/). 
 - The videos were created using myheritage.com/deep_nostalgia. 
 - The license to create this projectcan be found in the license.txt file acknowledging the rights of Udacity. 
